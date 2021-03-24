@@ -1,4 +1,4 @@
-Jméno;Příjmení;Pohlaví;Ulice;Obec;PSČ;Telefon;E-mail;Pozice;Nadřízený
+jmeno;prijmeni;pohlavi;ulice;obec;psc;telefon;email;pozice;nadrizeny
 Miroslav;Mička;M;Adélčina  1;Praha;19600;;micka@x.cz;dělník;Petr Almer
 Petr;Almer;M;;Praha;11000;;almer@x.cz;mistr;
 Jaroslav;Dlouhý;M;;Praha;11000;784927040;dlouhy@x.cz;dělník;Petr Almer

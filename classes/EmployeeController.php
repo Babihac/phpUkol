@@ -1,11 +1,14 @@
 <?php
 class EmployeeController
 {
-    private $employeeList;
+    private $employeeTable;
+    private $supervisorTable;
+    const EMPLOYEES_PER_PAGE = 10;
 
-    public function __construct(EmployeeList $employeeList)
+    public function __construct(Database $employeeTable, Database $supervisorTable)
     {
-        $this->employeeList = $employeeList;
+        $this->employeeTable = $employeeTable;
+        $this->supervisorTable = $supervisorTable;
     }
 
     private function sortBy(string $orderBy, array $data): array
@@ -25,28 +28,68 @@ class EmployeeController
 
     public function home(): array
     {
-        $allEmployees = $this->employeeList->getAllEmployees();
+        $page = $_GET['page'] ?? 1;
+        $page = htmlspecialchars($page, ENT_QUOTES, 'UTF-8');
+        $supervisors = $this->supervisorTable->findAllAndReturnData();
+        $offset = ($page - 1)  * EmployeeController::EMPLOYEES_PER_PAGE;
+        //prázndý string znamemá, že se nebude podle daného parametru třídit, nebo řadit
+        $supervisor = '';
+        $sort = '';
         if (isset($_GET['sort']) && !empty($_GET['sort'])) {
             $sort = htmlspecialchars($_GET['sort'], ENT_QUOTES, 'UTF-8');
-            $allEmployees = $this->sortBy($sort, $allEmployees);
         }
+        // } else {
+        //     $allEmployees = $this->employeeTable->findAll();
+        // }
+        if (isset($_GET['supervisor'])  && !empty($_GET['supervisor'])) {
+            $supervisor = htmlspecialchars($_GET['supervisor'], ENT_QUOTES, 'UTF-8');
+        }
+        $employees = $this->employeeTable
+            ->findAll()
+            ->where("nadrizeny", $supervisor)
+            ->sort($sort)
+            ->limit($offset, EmployeeController::EMPLOYEES_PER_PAGE)
+            ->queryTest()
+            ->fetchAll();
+
+        $count = $this->employeeTable
+            ->countAll()
+            ->where("nadrizeny", $supervisor)
+            ->queryTest()
+            ->fetch()[0];
+        $maxPage = ceil($count / EmployeeController::EMPLOYEES_PER_PAGE);
         $title = "Homepage";
         return [
             "title" => $title,
             "template" => "list.html.php",
-            "vars" => ["employees" => $allEmployees]
+            "vars" => [
+                "employees" => $employees,
+                "supervisors" => $supervisors,
+                "page" => $page,
+                "maxPage" => $maxPage
+            ]
         ];
     }
 
-    public function addNew(): array
+    public function editOrAddNew(): array
     {
-        $title = "Nový Zaměstnanec";
+        $employee = null;
+        $supervisors = $this->supervisorTable->findAllAndReturnData();
+        if (isset($_GET['id'])) {
+            $employee = $this->employeeTable->findById($_GET['id']);
+        }
+        $title = "Editace Zaměstnance";
         return [
             "title" => $title,
-            "template" => "addNew.html.php"
+            "template" => "editOrAddNew.html.php",
+            "vars" => [
+                "employee" => $employee,
+                "supervisors" => $supervisors
+            ]
         ];
     }
-
+    // metoda umožňuje editaci i založení nového zaměstnance
+    // vyhneme se tam vyvoření dou víceměně stejných metod a templátů
     public function save(): array
     {
         $employee = $_POST["emp"];
@@ -55,51 +98,50 @@ class EmployeeController
             $sanitizedEmp[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
         }
         $errors = [];
-        if (empty($sanitizedEmp['firstname'])) {
+        if (empty($sanitizedEmp['jmeno'])) {
             $errors[] = "Zaměstnanec musí mít jméno";
         }
-        if (empty($sanitizedEmp['lastname'])) {
+        if (empty($sanitizedEmp['prijmeni'])) {
             $errors[] = "Zaměstnanec musí mít příjmení";
         }
-        if (empty($sanitizedEmp['gender'])) {
+        if (empty($sanitizedEmp['pohlavi'])) {
             $errors[] = "Zaměstnanec musí mít pohlaví?";
         }
-        if (empty($sanitizedEmp['street'])) {
+        if (empty($sanitizedEmp['ulice'])) {
             $errors[] = "Zaměstnanec musí mít Ulici";
         }
 
-        if (empty($sanitizedEmp['city'])) {
+        if (empty($sanitizedEmp['obec'])) {
             $errors[] = "Zaměstnanec musí mít Obec";
         }
-        if (empty($sanitizedEmp['phone'])) {
+        if (empty($sanitizedEmp['telefon'])) {
             $errors[] = "Zaměstnanec musí mít telefon";
         }
-        if (empty($sanitizedEmp['zipCode'])) {
+        if (empty($sanitizedEmp['psc'])) {
             $errors[] = "Zaměstnanec musí mít PSČ";
         }
-        if (empty($sanitizedEmp['phone'])) {
-            $errors[] = "Zaměstnanec musí mít telefon";
-        }
-        if (empty($sanitizedEmp['mail'])) {
+        if (empty($sanitizedEmp['email'])) {
             $errors[] = "Zaměstnanec musí mít mail";
         }
-        if (empty($sanitizedEmp['position'])) {
+        if (empty($sanitizedEmp['pozice'])) {
             $errors[] = "Zaměstnanec musí mít pozici";
         }
-        if (($sanitizedEmp['position'] == "dělník") && empty($sanitizedEmp['supervisor'])) {
+        if (($sanitizedEmp['pozice'] == "dělník") && empty($sanitizedEmp['nadrizeny'])) {
             $errors[] = "Dělník musí mít nadřízeného";
         }
 
         if (empty($errors)) {
-            $this->employeeList->addNewEmployee($employee);
+            $this->employeeTable->save($sanitizedEmp);
             header("location: index.php?route=employees/home");
         } else {
+            $supervisors = $this->supervisorTable->findAllAndReturnData();
             return [
-                "template" => "addNew.html.php",
+                "template" => "editOrAddNew.html.php",
                 "title" => "Nový Zaměstnanec haah",
                 "vars" => [
                     "errors" => $errors,
-                    "employee" => $sanitizedEmp
+                    "employee" => $sanitizedEmp,
+                    "supervisors" => $supervisors
                 ]
             ];
         }

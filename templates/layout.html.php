@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="utf-8">
-    <!-- <link rel="stylesheet" href="jokes.css"> -->
     <title><?= $title ?></title>
     <link rel="stylesheet" href="./style.css">
 </head>
@@ -14,7 +13,7 @@
     </header>
     <nav>
         <ul>
-            <li><a href="index.php?route=employee/new">Nový zaměstnanec</a></li>
+            <li><a href="index.php?route=employee/edit">Nový zaměstnanec</a></li>
         </ul>
     </nav>
     <main>
