@@ -13,6 +13,16 @@
             </div>
 
             <div>
+                <p>Vyhledat zaměstance podle pozice</p>
+                <select name="position" id="position">
+                    <option></option>
+                    <?php foreach ($positions as $position) : ?>
+                        <option value="<?= $position['nazev_pozice'] ?>"><?= $position['nazev_pozice'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div>
                 <p>Řazení zaměsntanců podle:</p>
                 <select name="sort" id="sort">
                     <option></option>

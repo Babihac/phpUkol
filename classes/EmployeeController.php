@@ -3,12 +3,14 @@ class EmployeeController
 {
     private $employeeTable;
     private $supervisorTable;
+    private $positionTable;
     const EMPLOYEES_PER_PAGE = 10;
 
-    public function __construct(Database $employeeTable, Database $supervisorTable)
+    public function __construct(Database $employeeTable, Database $supervisorTable, Database $positionTable)
     {
         $this->employeeTable = $employeeTable;
         $this->supervisorTable = $supervisorTable;
+        $this->positionTable = $positionTable;
     }
 
     private function sortBy(string $orderBy, array $data): array
@@ -31,9 +33,11 @@ class EmployeeController
         $page = $_GET['page'] ?? 1;
         $page = htmlspecialchars($page, ENT_QUOTES, 'UTF-8');
         $supervisors = $this->supervisorTable->findAllAndReturnData();
+        $positions = $this->positionTable->findAllAndReturnData();
         $offset = ($page - 1)  * EmployeeController::EMPLOYEES_PER_PAGE;
         //prázndý string znamemá, že se nebude podle daného parametru třídit, nebo řadit
         $supervisor = '';
+        $position = '';
         $sort = '';
         if (isset($_GET['sort']) && !empty($_GET['sort'])) {
             $sort = htmlspecialchars($_GET['sort'], ENT_QUOTES, 'UTF-8');
@@ -44,9 +48,15 @@ class EmployeeController
         if (isset($_GET['supervisor'])  && !empty($_GET['supervisor'])) {
             $supervisor = htmlspecialchars($_GET['supervisor'], ENT_QUOTES, 'UTF-8');
         }
+
+        if (isset($_GET['position'])  && !empty($_GET['position'])) {
+            $position = htmlspecialchars($_GET['position'], ENT_QUOTES, 'UTF-8');
+        }
+
         $employees = $this->employeeTable
             ->findAll()
             ->where("nadrizeny", $supervisor)
+            ->and("pozice", $position)
             ->sort($sort)
             ->limit($offset, EmployeeController::EMPLOYEES_PER_PAGE)
             ->queryTest()
@@ -55,6 +65,7 @@ class EmployeeController
         $count = $this->employeeTable
             ->countAll()
             ->where("nadrizeny", $supervisor)
+            ->and("pozice", $position)
             ->queryTest()
             ->fetch()[0];
         $maxPage = ceil($count / EmployeeController::EMPLOYEES_PER_PAGE);
@@ -66,7 +77,8 @@ class EmployeeController
                 "employees" => $employees,
                 "supervisors" => $supervisors,
                 "page" => $page,
-                "maxPage" => $maxPage
+                "maxPage" => $maxPage,
+                "positions" => $positions
             ]
         ];
     }

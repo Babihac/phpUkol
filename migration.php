@@ -1,12 +1,14 @@
 <?php
 include __DIR__ . "/includes/dbConnection.php";
-$employeeDb = new Database($pdo, 'zamestnanec');
-$employeeList = new EmployeeList(__DIR__ . '/adresar.csv');
-$arr = $employeeList->getAllEmployees();
+
 try {
+    $employeeDb = new Database($pdo, 'zamestnanec2', "id");
+    $employeeList = new EmployeeList(__DIR__ . '/adresar.csv');
+    $arr = $employeeList->getAllEmployees();
     foreach ($arr as $zam) {
-        echo $employeeDb->insert($zam);
+        $employeeDb->insert($zam);
     }
+    //unlink(__DIR__ . "/./adresar.csv");
     //unlink(__DIR__ . "/adresar.csv");
 } catch (PDOException $e) {
     echo $e;

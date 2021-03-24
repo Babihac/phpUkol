@@ -16,14 +16,7 @@ class Database
         $this->parameters = [];
     }
 
-    /**
-     * metoda slouží pro bezpečné vykonávání sql dotazů
-     *
-     * @param string $sql konkrétní sql dotaz
-     * @param array $params parametry, které se dosadí do dotazu po pdo->prepare()
-     *
-     * @return PDOStatement
-     */
+
     private function query(string $sql, array $params = []): PDOStatement | bool
     {
         $preparedQuery = $this->pdo->prepare($sql);
@@ -87,10 +80,22 @@ class Database
     public function where($field, $value): Database
     {
         if ($value == '') {
+            //vrácí vše proto, aby správně fungovala metoda and()
+            $this->queryString .= " WHERE 1=1 ";
             return $this;
         }
         $this->queryString .= " WHERE " . $field . " = :value";
         $this->parameters[":value"] = $value;
+        return $this;
+    }
+
+    public function and($field, $value): Database
+    {
+        if ($value == '') {
+            return $this;
+        }
+        $this->queryString .= " AND " . $field . " = :andParam";
+        $this->parameters[":andParam"] = $value;
         return $this;
     }
 
