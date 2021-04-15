@@ -60,7 +60,15 @@
             <td><?= $employee["email"] ?></td>
             <td><?= $employee["pozice"] ?></td>
             <td><?= $employee["nadrizeny"] ?></td>
-            <td><a href="index.php?route=employee/edit&id=<?= $employee['id'] ?>">Editovat</a></td>
+            <td>
+
+                <?php if ($employee["editable"]) : ?>
+
+                    <a href="index.php?route=employee/edit&id=<?= $employee['id'] ?>">Editovat</a>
+                <?php else : ?>
+                    <span>Nelze editovat</span>
+                <?php endif ?>
+            </td>
 
         </tr>
     <?php endforeach; ?>

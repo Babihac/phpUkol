@@ -39,10 +39,16 @@ class Database
         return $preparedQuery;
     }
 
-    public function findById(string $id): array
+    public function findById(string $id)
     {
         $query = "SELECT * from " . $this->table . " WHERE " . $this->primaryKey . " = :id";
         return $this->query($query, [":id" => $id])->fetch();
+    }
+
+    public function findOne($column, $value)
+    {
+        $query = "SELECT * from " . $this->table . " WHERE " . $column . "  = :value";
+        return $this->query($query, [":value" => $value])->fetch();
     }
 
     public function findAllAndReturnData(string $orderBy = '', string $order = "ASC"): array

@@ -26,7 +26,12 @@ class EntryPoint
         $routes = $this->routes->getRoutes();
         $controller = $routes[$this->route][$this->method]['controller'];
         $action = $routes[$this->route][$this->method]['action'];
+        $auth = $this->routes->getAuthentication();
         $page = $controller->$action();
+        $isLoginRequired = $routes[$this->route]["login"] ?? false;
+        if ($isLoginRequired && !$auth->isLoggedIn()) {
+            header("location: index.php?route=auth/login");
+        }
         $title = $page["title"];
 
         if (isset($page['vars'])) {
@@ -35,6 +40,11 @@ class EntryPoint
             $output = $this->loadTemplate($page['template']);
         }
 
-        echo $this->loadTemplate("layout.html.php", ["title" => $title,  "output" => $output]);
+        echo $this->loadTemplate("layout.html.php", [
+            "title" => $title,
+            "output" => $output,
+            "isLoggedIn" => $auth->isLoggedIn(),
+            "user" => $auth->getUser()
+        ]);
     }
 }
